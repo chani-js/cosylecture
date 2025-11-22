@@ -19,21 +19,14 @@
       v-if="user"
       :books="books"
       @edit="startEditing"
-      @cycle-status="handleCycleStatus"
       @delete="handleDeleteBook"
+      @change-status="handleCycleStatus"
     />
-
-    <p v-if="!user" class="footer-note">
-      Connecte-toi ou crée un compte pour commencer ✨
-    </p>
-    <p v-else class="footer-note">
-      Les livres sont enregistrés dans une base en ligne liée à ton compte ✨
-    </p>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 import AuthPanel from './components/AuthPanel.vue';
 import BookForm from './components/BookForm.vue';
 import BooksColumns from './components/BooksColumns.vue';
@@ -51,8 +44,8 @@ let unsubscribe = null;
 
 function onUserChanged(u) {
   user.value = u;
-  books.value = [];
   editingBook.value = null;
+  books.value = [];
 
   if (unsubscribe) {
     unsubscribe();
@@ -62,7 +55,7 @@ function onUserChanged(u) {
   if (u) {
     unsubscribe = listenUserBooks(
       u.uid,
-      (b) => (books.value = b),
+      (list) => (books.value = list),
       (err) => console.error('Erreur Firestore', err)
     );
   }
@@ -78,17 +71,22 @@ function clearEditing() {
 
 async function handleSaveBook(payload) {
   if (!user.value) return;
-  await saveBook(user.value.uid, {
-    title: payload.title,
-    author: payload.author,
-    status: payload.status,
-    rating: payload.rating,
-    tags: payload.tags,
-    comment: payload.comment,
-  }, payload.id);
-  if (!payload.id) {
-    clearEditing();
-  }
+
+  await saveBook(
+    user.value.uid,
+    {
+      title: payload.title,
+      author: payload.author,
+      status: payload.status,
+      rating: payload.rating,
+      tags: payload.tags,
+      comment: payload.comment,
+      coverUrl: payload.coverUrl,
+    },
+    payload.id
+  );
+
+  clearEditing();
 }
 
 async function handleDeleteBook(book) {
@@ -101,4 +99,8 @@ async function handleCycleStatus(book) {
   if (!user.value) return;
   await cycleStatus(user.value.uid, book);
 }
+
+onBeforeUnmount(() => {
+  if (unsubscribe) unsubscribe();
+});
 </script>

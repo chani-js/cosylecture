@@ -1,9 +1,9 @@
+<!-- src/components/BookForm.vue -->
 <template>
   <section class="panel">
     <div class="panel-title">➕ Ajouter ou modifier un livre</div>
 
     <form @submit.prevent="submitForm" id="book-form">
-      <!-- Champ caché pour l'id -->
       <input type="hidden" v-model="form.id" />
 
       <!-- Titre -->
@@ -18,8 +18,13 @@
           required
         />
         <ul v-if="suggestions.length" class="suggestions">
-          <li v-for="s in suggestions" :key="s.key" @click="applySuggestion(s)">
-            {{ s.title }} <span v-if="s.author_name">({{ s.author_name[0] }})</span>
+          <li
+            v-for="s in suggestions"
+            :key="s.key"
+            @click="applySuggestion(s)"
+          >
+            {{ s.title }}
+            <span v-if="s.author_name">({{ s.author_name[0] }})</span>
           </li>
         </ul>
       </div>
@@ -44,7 +49,14 @@
       <!-- Note -->
       <div class="field">
         <label for="rating">Note (/5)</label>
-        <input id="rating" type="number" min="0" max="5" step="0.5" v-model="form.rating" />
+        <input
+          id="rating"
+          type="number"
+          min="0"
+          max="5"
+          step="0.5"
+          v-model="form.rating"
+        />
       </div>
 
       <!-- Tags -->
@@ -81,7 +93,12 @@
       </div>
 
       <div class="actions" style="grid-column:1 / -1;">
-        <button v-if="form.id" type="button" class="secondary" @click="resetForm">
+        <button
+          v-if="form.id"
+          type="button"
+          class="secondary"
+          @click="resetForm"
+        >
           Annuler
         </button>
         <button type="submit" class="primary">💾 Enregistrer</button>
@@ -91,38 +108,62 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
-import { searchBooks } from '@/services/booksServices.js';
+import { reactive, ref, watch } from 'vue';
+import { searchBooks } from '../services/booksService';
 
 const props = defineProps({
-  editingBook: Object
+  editingBook: Object,
 });
 
-const emit = defineEmits(['save', 'cancel']);
+const emit = defineEmits(['save', 'cancel-edit']);
 
 const form = reactive({
-  id: props.editingBook?.id || null,
-  title: props.editingBook?.title || '',
-  author: props.editingBook?.author || '',
-  status: props.editingBook?.status || 'a_acheter',
-  rating: props.editingBook?.rating || '',
-  tags: props.editingBook?.tags || [],
-  comment: props.editingBook?.comment || '',
-  coverUrl: props.editingBook?.coverUrl || '',
+  id: null,
+  title: '',
+  author: '',
+  status: 'a_acheter',
+  rating: '',
+  tags: [],
+  comment: '',
+  coverUrl: '',
 });
 
-const tagsInput = ref(form.tags.join(', '));
+const tagsInput = ref('');
 const suggestions = ref([]);
 
+// synchroniser avec le livre en cours d’édition
+watch(
+  () => props.editingBook,
+  (book) => {
+    if (book) {
+      form.id = book.id || null;
+      form.title = book.title || '';
+      form.author = book.author || '';
+      form.status = book.status || 'a_acheter';
+      form.rating = book.rating || '';
+      form.tags = book.tags || [];
+      form.comment = book.comment || '';
+      form.coverUrl = book.coverUrl || '';
+      tagsInput.value = (book.tags || []).join(', ');
+    } else {
+      resetLocalForm();
+    }
+  },
+  { immediate: true }
+);
+
 async function searchSuggestions() {
-  if (form.title.length < 3) return (suggestions.value = []);
+  if (form.title.length < 3) {
+    suggestions.value = [];
+    return;
+  }
   suggestions.value = await searchBooks(form.title);
 }
 
 function updateTags() {
   form.tags = tagsInput.value
     .split(',')
-    .map(t => t.trim())
+    .map((t) => t.trim())
     .filter(Boolean);
 }
 
@@ -130,7 +171,7 @@ function applySuggestion(s) {
   form.title = s.title;
   if (s.author_name?.length) form.author = s.author_name[0];
 
-  // Ajout de la pochette OpenLibrary
+  // Pochette OpenLibrary
   if (s.cover_i) {
     form.coverUrl = `https://covers.openlibrary.org/b/id/${s.cover_i}-M.jpg`;
   } else if (s.isbn?.length) {
@@ -144,8 +185,22 @@ function submitForm() {
   emit('save', { ...form });
 }
 
+function resetLocalForm() {
+  form.id = null;
+  form.title = '';
+  form.author = '';
+  form.status = 'a_acheter';
+  form.rating = '';
+  form.tags = [];
+  form.comment = '';
+  form.coverUrl = '';
+  tagsInput.value = '';
+  suggestions.value = [];
+}
+
 function resetForm() {
-  emit('cancel');
+  resetLocalForm();
+  emit('cancel-edit');
 }
 </script>
 
@@ -178,6 +233,6 @@ function resetForm() {
   height: 110px;
   border-radius: 6px;
   object-fit: cover;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 </style>
