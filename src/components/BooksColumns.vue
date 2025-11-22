@@ -1,79 +1,118 @@
 <template>
-  <section class="columns">
+  <div class="columns">
     <div
-      v-for="(list, status) in grouped"
-      :key="status"
+      v-for="(books, statusKey) in grouped"
+      :key="statusKey"
       class="column"
     >
       <div class="column-header">
         <div class="column-title">
-          {{ STATUS[status].emoji }} {{ STATUS[status].label }}
+          {{ STATUS_CONFIG[statusKey].emoji }} {{ STATUS_CONFIG[statusKey].label }}
         </div>
-        <div class="column-count">{{ list.length }} livre(s)</div>
+        <div class="column-count">{{ books.length }} livre(s)</div>
       </div>
 
-      <div v-if="list.length === 0" class="empty">
+      <div v-if="books.length === 0" class="empty">
         Rien ici pour le moment ✨
       </div>
 
       <div
-        v-for="book in list"
+        v-for="book in books"
         :key="book.id"
         class="book-card"
       >
         <div class="book-main">
+          <!-- Pochette -->
           <div v-if="book.coverUrl" class="book-cover">
-            <img :src="book.coverUrl" :alt="book.title" />
+            <img
+              :src="book.coverUrl"
+              :alt="`Pochette de ${book.title}`"
+              loading="lazy"
+            />
           </div>
 
+          <!-- Texte -->
           <div class="book-text">
             <div class="book-title">{{ book.title }}</div>
-            <div class="book-author">{{ book.author }}</div>
+            <div class="book-author">{{ book.author || "Auteur inconnu" }}</div>
           </div>
 
+          <!-- Note -->
           <div class="book-meta" v-if="book.rating">
             <div class="stars">{{ starString(book.rating) }}</div>
           </div>
         </div>
 
+        <!-- Meta tag + statut -->
         <div class="book-meta">
-          <span class="pill-status">{{ STATUS[book.status].label }}</span>
-          <span v-if="book.tags.length" class="chip">
-            {{ book.tags.join(', ') }}
+          <span class="pill-status">{{ STATUS_CONFIG[book.status].label }}</span>
+
+          <span
+            v-if="book.tags && book.tags.length"
+            class="chip"
+          >
+            {{ book.tags.join(", ") }}
           </span>
         </div>
 
+        <!-- Commentaire -->
         <div v-if="book.comment" class="book-comment">
           {{ book.comment }}
         </div>
 
+        <!-- Actions -->
         <div class="book-actions">
           <button class="secondary" @click="$emit('edit', book)">Modifier</button>
-          <button class="secondary" @click="$emit('move', book)">Changer de liste</button>
+          <button class="secondary" @click="$emit('change-status', book)">Changer de liste</button>
           <button class="secondary" @click="$emit('delete', book)">Supprimer</button>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 </template>
 
 <script setup>
+import { computed } from "vue";
+
 const props = defineProps({
-  grouped: Object
+  books: {
+    type: Array,
+    required: true,
+  },
 });
 
-const STATUS = {
+const emits = defineEmits(["edit", "delete", "change-status"]);
+
+const STATUS_CONFIG = {
   a_acheter: { label: "À acheter", emoji: "🛒" },
   a_lire: { label: "À lire", emoji: "🌱" },
   en_cours: { label: "En cours", emoji: "🔁" },
-  termine: { label: "Terminés", emoji: "✅" }
+  termine: { label: "Terminés", emoji: "✅" },
 };
 
-function starString(r) {
-  r = Number(r);
-  const f = "★".repeat(Math.floor(r));
-  const h = r % 1 ? "½" : "";
-  const e = "☆".repeat(5 - Math.ceil(r));
-  return f + h + e;
+function starString(rating) {
+  const full = "★".repeat(Math.floor(rating));
+  const half = rating % 1 ? "½" : "";
+  const empty = "☆".repeat(5 - Math.ceil(rating));
+  return full + half + empty;
 }
-</scr
+
+const grouped = computed(() => {
+  const groups = {
+    a_acheter: [],
+    a_lire: [],
+    en_cours: [],
+    termine: [],
+  };
+
+  for (const book of props.books) {
+    if (groups[book.status]) groups[book.status].push(book);
+  }
+
+  return groups;
+});
+</script>
+
+<style scoped>
+/* (Tu peux garder ton CSS existant, ici juste la structure) */
+</style>
