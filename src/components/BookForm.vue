@@ -92,7 +92,7 @@
 
 <script setup>
 import { reactive, ref } from 'vue';
-import { searchBooks } from '../services/booksServices.js';
+import { searchBooks } from '@/services/booksServices.js';
 
 const props = defineProps({
   editingBook: Object
