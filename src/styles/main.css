@@ -1,0 +1,372 @@
+:root {
+  --bg: #fdf6e3;
+  --card: #fff7ea;
+  --accent: #e1a6a9;
+  --accent-dark: #c67a7d;
+  --text: #3a2f2f;
+  --muted: #8b7a7a;
+  --border: #eddcc7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* Panels */
+
+.panel,
+.auth-panel {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 16px 18px 18px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+
+.panel-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Auth */
+
+.auth-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.user-info {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.auth-forms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px 20px;
+}
+
+.auth-title {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+}
+
+.auth-status {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* Form + champs */
+
+.book-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px 12px;
+  align-items: flex-end;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+}
+
+.field label {
+  color: var(--muted);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+select,
+textarea {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  background: #fffdf8;
+  font-family: inherit;
+  color: var(--text);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 40px;
+  max-height: 100px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+.full-row {
+  grid-column: 1 / -1;
+}
+
+/* Boutons */
+
+button {
+  border-radius: 999px;
+  border: none;
+  padding: 7px 14px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.05s ease, box-shadow 0.1s ease, background 0.15s ease;
+}
+
+button.primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+button.primary:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+button.secondary {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  padding-inline: 10px;
+}
+
+button.secondary:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+/* Colonnes + cartes */
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 6px;
+}
+
+@media (max-width: 960px) {
+  .columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.column {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
+  padding: 10px 10px 12px;
+  border: 1px solid var(--border);
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.column-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.column-count {
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.empty {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.book-card {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 8px 9px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.85rem;
+}
+
+.book-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.book-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.book-title {
+  font-weight: 600;
+}
+
+.book-author {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.book-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.chip {
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.stars {
+  font-size: 0.8rem;
+}
+
+.book-comment {
+  font-size: 0.78rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  padding: 5px 7px;
+  margin-top: 2px;
+  max-height: 80px;
+  overflow: auto;
+}
+
+.book-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.pill-status {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 999px;
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+}
+
+.footer-note {
+  margin-top: 20px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: right;
+  font-style: italic;
+}
+
+/* Suggestions titres */
+
+.suggestions {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fffdf8;
+  max-height: 160px;
+  overflow: auto;
+  font-size: 0.8rem;
+}
+
+.suggestions li {
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.suggestions li:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
