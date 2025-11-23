@@ -9,99 +9,82 @@ import {
   query,
   updateDoc,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db } from './firebase.js';
 
-export const STATUS_ORDER = ['a_acheter', 'a_lire', 'en_cours', 'termine'];
-
-export const STATUS_CONFIG = {
-  a_acheter: { label: 'À acheter', emoji: '🛒' },
-  a_lire: { label: 'À lire', emoji: '🌱' },
-  en_cours: { label: 'En cours', emoji: '🔁' },
-  termine: { label: 'Terminés', emoji: '✅' },
-};
-
-// === Référence Firestore pour les livres d’un utilisateur ===
+// Référence vers la collection de livres d'un utilisateur
 export function userBooksRef(userId) {
   return collection(db, 'users', userId, 'books');
 }
 
-// === Écoute temps réel des livres d’un user ===
-export function listenUserBooks(userId, onBooks, onError) {
-  const q = query(userBooksRef(userId), orderBy('updatedAt', 'desc'));
+// Abonnement temps réel aux livres d'un utilisateur
+export function subscribeToBooks(userId, callback) {
+  const ref = userBooksRef(userId);
+  const q = query(ref, orderBy('updatedAt', 'desc'));
 
-  return onSnapshot(
-    q,
-    (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      onBooks(list);
-    },
-    (err) => {
-      if (onError) onError(err);
-      else console.error(err);
-    }
-  );
+  return onSnapshot(q, (snapshot) => {
+    const items = snapshot.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    }));
+    callback(items);
+  });
 }
 
-// === Sauvegarde (création ou update) d’un livre ===
-export async function saveBook(userId, data, id = null) {
+// Création / mise à jour d'un livre
+export async function saveBook(userId, book) {
   const ref = userBooksRef(userId);
   const payload = {
-    title: data.title || '',
-    author: data.author || '',
-    status: data.status || 'a_acheter',
-    rating: data.rating || '',
-    tags: data.tags || [],
-    comment: data.comment || '',
-    coverUrl: data.coverUrl || '',
+    title: book.title || '',
+    author: book.author || '',
+    status: book.status || 'a_acheter',
+    rating: book.rating || '',
+    tags: Array.isArray(book.tags) ? book.tags : [],
+    comment: book.comment || '',
+    coverUrl: book.coverUrl || '',
     updatedAt: Date.now(),
   };
 
-  if (id) {
-    await updateDoc(doc(ref, id), payload);
+  if (book.id) {
+    await updateDoc(doc(ref, book.id), payload);
+    return book.id;
   } else {
-    await addDoc(ref, {
-      ...payload,
-      createdAt: Date.now(),
-    });
+    payload.createdAt = Date.now();
+    const docRef = await addDoc(ref, payload);
+    return docRef.id;
   }
 }
 
-// === Suppression d’un livre ===
-export async function deleteBook(userId, bookId) {
-  await deleteDoc(doc(userBooksRef(userId), bookId));
+// Suppression
+export async function deleteBook(userId, id) {
+  const ref = userBooksRef(userId);
+  await deleteDoc(doc(ref, id));
 }
 
-// === Passage à la liste suivante ===
+// Passage à la liste suivante (cycle Kanban)
 export async function cycleStatus(userId, book) {
-  const currentIndex = STATUS_ORDER.indexOf(book.status || 'a_acheter');
-  const next = STATUS_ORDER[(currentIndex + 1) % STATUS_ORDER.length];
+  const order = ['a_acheter', 'a_lire', 'en_cours', 'termine'];
+  const currentIndex = order.indexOf(book.status || 'a_acheter');
+  const next = order[(currentIndex + 1) % order.length];
 
-  await updateDoc(doc(userBooksRef(userId), book.id), {
+  const ref = userBooksRef(userId);
+  await updateDoc(doc(ref, book.id), {
     status: next,
     updatedAt: Date.now(),
   });
 }
 
-// === Recherche de livres (OpenLibrary) ===
+// Suggestions de livres via OpenLibrary
 export async function searchBooks(text) {
-  if (!text || text.trim().length < 3) return [];
-
-  const url =
-    'https://openlibrary.org/search.json?' +
-    new URLSearchParams({
-      q: text.trim(),
-      limit: '10',
-    }).toString();
-
-  const res = await fetch(url);
-  if (!res.ok) return [];
-
-  const data = await res.json();
-  return (data.docs || []).map((d) => ({
-    key: d.key,
-    title: d.title,
-    author_name: d.author_name,
-    cover_i: d.cover_i,
-    isbn: d.isbn,
-  }));
+  const q = text.trim();
+  if (!q) return [];
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=10`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.docs || [];
+  } catch (e) {
+    console.error('Erreur OpenLibrary', e);
+    return [];
+  }
 }
